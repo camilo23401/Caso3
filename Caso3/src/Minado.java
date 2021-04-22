@@ -6,11 +6,35 @@ import java.security.*;
 import java.util.ArrayList;
 import java.util.Vector;
 
-public class Minado {
+public class Minado extends Thread{
 
 	private static boolean encontrado = false;
 	private static long tiempoInicial = 0;
 	private static int longitudMensaje = 0;
+	private static MessageDigest tipoHash;
+
+	private static Object monitor = new Object();
+
+	private int longitudCadena;
+	private char[] abecedario= new char[26];
+	private String mensaje;
+	private int ceros;
+	private String algoritmo;
+
+	public Minado(char[] abecedario, int k, String mensaje, int ceros, String algoritmo)
+	{
+		this.longitudCadena = k;
+		this.abecedario = abecedario;
+		this.mensaje = mensaje;
+		this.ceros = ceros;
+		this.algoritmo = algoritmo;
+	}
+
+	public void run()
+	{
+		mineria(abecedario, longitudCadena, mensaje, ceros, algoritmo);
+		System.out.println("Termino el thread que revisaba cadenas de longitud " + longitudCadena);
+	}
 
 	@SuppressWarnings("finally")
 	public static String hash(String mensaje, String algoritmo)
@@ -37,6 +61,7 @@ public class Minado {
 		}
 	}
 
+
 	static void mineria(char[] abecedario, int k, String mensaje, int ceros, String algoritmo)
 	{
 		int n = abecedario.length;
@@ -46,35 +71,49 @@ public class Minado {
 
 	static void mineriaRec(char[] abecedario, String mensaje, int n, int k, int ceros, String algoritmo)
 	{
-
-		if (k == 0)
+		boolean fin;
+		synchronized(monitor)
 		{
-			String mensajeConV = mensaje;
-			String hashResultante = hash(mensajeConV, algoritmo);
-			int contadorCeros = 0;
-			int aux = 0;
-			char revision = hashResultante.charAt(aux);
-			while(revision=='0')
+			fin = encontrado;
+		}
+		if(encontrado)
+		{
+
+		}
+		else
+		{
+			if (k == 0)
 			{
-				contadorCeros++;
-				aux++;
-				revision = hashResultante.charAt(aux);
+				String mensajeConV = mensaje;
+				String hashResultante = hash(mensajeConV, algoritmo);
+				int contadorCeros = 0;
+				int aux = 0;
+				char revision = hashResultante.charAt(aux);
+				while(revision=='0')
+				{
+					contadorCeros++;
+					aux++;
+					revision = hashResultante.charAt(aux);
+				}
+				if(contadorCeros == ceros)
+				{
+					long elapsedTime = System.nanoTime() - tiempoInicial;
+					synchronized(monitor)
+					{
+						encontrado = true;	
+					}
+					System.out.println("El valor "+mensaje.substring(longitudMensaje,mensaje.length())+" permitió cumplir la condición definida");
+					System.out.println("El proceso tomó " + elapsedTime/1000000 + "ms" );
+				}
+				return;
 			}
-			if(contadorCeros == ceros)
+			for (int i = 0; i < n; ++i)
 			{
-				long elapsedTime = System.nanoTime() - tiempoInicial;
-				encontrado = true;
-				System.out.println("El valor "+mensaje.substring(longitudMensaje,mensaje.length())+" permitió cumplir la condición definida");
-				System.out.println("El proceso tomó " + elapsedTime/1000000 + "ms" );
+				String nuevoMensaje = mensaje + abecedario[i];
+				mineriaRec(abecedario, nuevoMensaje, n, k - 1,ceros,algoritmo);
 			}
-			return;
 		}
 
-		for (int i = 0; i < n && !encontrado; ++i)
-		{
-			String nuevoMensaje = mensaje + abecedario[i];
-			mineriaRec(abecedario, nuevoMensaje, n, k - 1,ceros,algoritmo);
-		}
 	}
 
 
@@ -95,10 +134,16 @@ public class Minado {
 		longitudMensaje = mensaje.length();
 
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+		Minado[] threads = new Minado[7]; 
 		tiempoInicial = System.nanoTime();
-		for(int i =1; i<8 && !encontrado;i++)
+		for(int i =0; i<7;i++)
 		{
-			mineria(abecedario, i, mensaje, ceros, algoritmo);
+			threads[i] = new Minado(abecedario, i+1, mensaje, ceros, algoritmo);
+		}
+
+		for(int i =0; i<7;i++)
+		{
+			threads[i].start();
 		}
 	}
 
