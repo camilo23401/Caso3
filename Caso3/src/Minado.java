@@ -37,18 +37,21 @@ public class Minado extends Thread{
 	}
 
 	@SuppressWarnings("finally")
-	public static String hash(String mensaje, String algoritmo)
+	public static boolean hash(String mensaje, String algoritmo, int ceros)
 	{
-		String hashFinal = "";
+		boolean hashFinal = false;
 		try
 		{
 			MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
 			byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
-			BigInteger hashComoNumero = new BigInteger(1, hashInicial);
-			hashFinal = hashComoNumero.toString(16);
-			while(hashFinal.length()< 128)
+			int i = 0;
+			while(hashInicial[i]==0)
 			{
-				hashFinal = "0"+hashFinal;
+				i++;
+			}
+			if(i==ceros)
+			{
+				hashFinal = true;
 			}
 		}
 		catch(Exception e)
@@ -85,17 +88,8 @@ public class Minado extends Thread{
 			if (k == 0)
 			{
 				String mensajeConV = mensaje;
-				String hashResultante = hash(mensajeConV, algoritmo);
-				int contadorCeros = 0;
-				int aux = 0;
-				char revision = hashResultante.charAt(aux);
-				while(revision=='0')
-				{
-					contadorCeros++;
-					aux++;
-					revision = hashResultante.charAt(aux);
-				}
-				if(contadorCeros == ceros)
+				boolean hashSirve = hash(mensajeConV, algoritmo,ceros);
+				if(hashSirve)
 				{
 					long elapsedTime = System.nanoTime() - tiempoInicial;
 					synchronized(monitor)
@@ -132,13 +126,14 @@ public class Minado extends Thread{
 		int ceros = Integer.parseInt(reader.readLine());
 
 		longitudMensaje = mensaje.length();
+		int bytesEnCero = ceros/2;
 
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 		Minado[] threads = new Minado[7]; 
 		tiempoInicial = System.nanoTime();
 		for(int i =0; i<7;i++)
 		{
-			threads[i] = new Minado(abecedario, i+1, mensaje, ceros, algoritmo);
+			threads[i] = new Minado(abecedario, i+1, mensaje, bytesEnCero, algoritmo);
 		}
 
 		for(int i =0; i<7;i++)
