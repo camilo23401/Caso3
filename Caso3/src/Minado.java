@@ -12,74 +12,107 @@ public class Minado extends Thread{
 	private static long tiempoInicial = 0;
 	private static int longitudMensaje = 0;
 	private static MessageDigest tipoHash;
+	private static boolean entero;
 
 	private static Object monitor = new Object();
 
 	private int longitudCadena;
 	private char[] abecedario= new char[26];
 	private String mensaje;
-	private int ceros;
+	private double ceros;
 	private String algoritmo;
+	private volatile boolean fin;
 
-	public Minado(char[] abecedario, int k, String mensaje, int ceros, String algoritmo)
+	public Minado(char[] abecedario, int k, String mensaje, double ceros, String algoritmo)
 	{
 		this.longitudCadena = k;
 		this.abecedario = abecedario;
 		this.mensaje = mensaje;
 		this.ceros = ceros;
 		this.algoritmo = algoritmo;
+		this.fin = false;
 	}
 
 	public void run()
 	{
-		mineria(abecedario, longitudCadena, mensaje, ceros, algoritmo);
+		mineria(abecedario, longitudCadena, mensaje, ceros, algoritmo, fin);
 		System.out.println("Termino el thread que revisaba cadenas de longitud " + longitudCadena);
 	}
 
 	@SuppressWarnings("finally")
-	public static boolean hash(String mensaje, String algoritmo, int ceros)
+	public static boolean hash(String mensaje, String algoritmo, double ceros)
 	{
 		boolean hashFinal = false;
-		try
-		{
-			MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
-			byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
-			int i = 0;
-			while(hashInicial[i]==0)
+		if(entero) {
+			try
 			{
-				i++;
+				MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
+				byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
+				int i = 0;
+				while(hashInicial[i]==0)
+				{
+					i++;
+				}
+				if(i==ceros)
+				{
+					hashFinal = true;
+				}
 			}
-			if(i==ceros)
+			catch(Exception e)
 			{
-				hashFinal = true;
+				e.getStackTrace();
+			}
+			finally 
+			{
+				return hashFinal;
 			}
 		}
-		catch(Exception e)
+		else
 		{
-			e.getStackTrace();
-		}
-		finally 
-		{
-			return hashFinal;
+			try
+			{
+				MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
+				byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
+				int i = 0;
+				while(hashInicial[i]==0)
+				{
+					i++;
+				}
+				if(hashInicial[i]>=8 && hashInicial[i]<=15)
+				{
+					i++;
+				}
+				if(i==ceros)
+				{
+					hashFinal = true;
+				}
+			}
+			catch(Exception e)
+			{
+				e.getStackTrace();
+			}
+			finally 
+			{
+				return hashFinal;
+			}
 		}
 	}
 
 
-	static void mineria(char[] abecedario, int k, String mensaje, int ceros, String algoritmo)
+	static void mineria(char[] abecedario, int k, String mensaje, double ceros, String algoritmo, boolean fin)
 	{
 		int n = abecedario.length;
-		mineriaRec(abecedario, mensaje, n, k, ceros, algoritmo);
+		mineriaRec(abecedario, mensaje, n, k, ceros, algoritmo, fin);
 	}
 
 
-	static void mineriaRec(char[] abecedario, String mensaje, int n, int k, int ceros, String algoritmo)
+	static void mineriaRec(char[] abecedario, String mensaje, int n, int k, double ceros, String algoritmo, boolean fin)
 	{
-		boolean fin;
 		synchronized(monitor)
 		{
 			fin = encontrado;
 		}
-		if(encontrado)
+		if(fin)
 		{
 
 		}
@@ -104,7 +137,7 @@ public class Minado extends Thread{
 			for (int i = 0; i < n; ++i)
 			{
 				String nuevoMensaje = mensaje + abecedario[i];
-				mineriaRec(abecedario, nuevoMensaje, n, k - 1,ceros,algoritmo);
+				mineriaRec(abecedario, nuevoMensaje, n, k - 1,ceros,algoritmo,fin);
 			}
 		}
 
@@ -126,7 +159,16 @@ public class Minado extends Thread{
 		int ceros = Integer.parseInt(reader.readLine());
 
 		longitudMensaje = mensaje.length();
-		int bytesEnCero = ceros/2;
+		double bytesEnCero = Double.parseDouble(ceros+"")/8;
+		
+		if(bytesEnCero%1==0)
+		{
+			entero = true;
+		}
+		else
+		{
+			entero = false;
+		}
 
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 		Minado[] threads = new Minado[7]; 
