@@ -13,7 +13,7 @@ public class Minado extends Thread{
 	private static int longitudMensaje = 0;
 	private static MessageDigest tipoHash;
 	private static boolean entero;
-
+	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 	private static Object monitor = new Object();
 
 	private int longitudCadena;
@@ -43,58 +43,35 @@ public class Minado extends Thread{
 	public static boolean hash(String mensaje, String algoritmo, double ceros)
 	{
 		boolean hashFinal = false;
-		if(entero) {
-			try
+		try
+		{
+			MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
+			byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
+			int numCeros = 0;
+			String hex = bytesToHex(hashInicial);
+			
+			for(int i = 0; i<hex.length();i++)
 			{
-				MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
-				byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
-				int i = 0;
-				while(hashInicial[i]==0)
+				if(hex.charAt(i)=='0')
 				{
-					i++;
+					numCeros+=4;
 				}
-				if(i==ceros)
-				{
-					hashFinal = true;
+				else {
+					i = hex.length();
 				}
 			}
-			catch(Exception e)
+			if(numCeros == ceros)
 			{
-				e.getStackTrace();
-			}
-			finally 
-			{
-				return hashFinal;
+				hashFinal = true;
 			}
 		}
-		else
+		catch(Exception e)
 		{
-			try
-			{
-				MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
-				byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
-				int i = 0;
-				while(hashInicial[i]==0)
-				{
-					i++;
-				}
-				if(hashInicial[i]>=8 && hashInicial[i]<=15)
-				{
-					i++;
-				}
-				if(i==ceros)
-				{
-					hashFinal = true;
-				}
-			}
-			catch(Exception e)
-			{
-				e.getStackTrace();
-			}
-			finally 
-			{
-				return hashFinal;
-			}
+			e.getStackTrace();
+		}
+		finally 
+		{
+			return hashFinal;
 		}
 	}
 
@@ -142,6 +119,16 @@ public class Minado extends Thread{
 		}
 
 	}
+	
+	public static String bytesToHex(byte[] bytes) {
+	    char[] hexChars = new char[bytes.length * 2];
+	    for (int j = 0; j < bytes.length; j++) {
+	        int v = bytes[j] & 0xFF;
+	        hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+	        hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+	    }
+	    return new String(hexChars);
+	}
 
 
 	public static void main(String[] args) throws IOException {
@@ -159,23 +146,12 @@ public class Minado extends Thread{
 		int ceros = Integer.parseInt(reader.readLine());
 
 		longitudMensaje = mensaje.length();
-		double bytesEnCero = Double.parseDouble(ceros+"")/8;
-		
-		if(bytesEnCero%1==0)
-		{
-			entero = true;
-		}
-		else
-		{
-			entero = false;
-		}
-
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 		Minado[] threads = new Minado[7]; 
 		tiempoInicial = System.nanoTime();
 		for(int i =0; i<7;i++)
 		{
-			threads[i] = new Minado(abecedario, i+1, mensaje, bytesEnCero, algoritmo);
+			threads[i] = new Minado(abecedario, i+1, mensaje, ceros, algoritmo);
 		}
 
 		for(int i =0; i<7;i++)
