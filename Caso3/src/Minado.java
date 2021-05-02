@@ -11,6 +11,7 @@ public class Minado extends Thread{
 	private static int longitudMensaje = 0;
 	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 	private static Object monitor = new Object();
+	private static int threadsFinalizados = 0;
 
 	private int longitudCadena;
 	private char[] abecedario= new char[26];
@@ -34,7 +35,6 @@ public class Minado extends Thread{
 	public void run()
 	{
 		mineria(abecedario, longitudCadena, mensaje, ceros, algoritmo, fin, letra);
-		System.out.println("Termino el thread que revisaba cadenas de longitud " + longitudCadena);
 	}
 
 	@SuppressWarnings("finally")
@@ -141,19 +141,16 @@ public class Minado extends Thread{
 	public static void main(String[] args) throws IOException {
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
 		System.out.println("Ingrese el algoritmo de generación de código de Hash (SHA-256 o SHA-512):");
-
 		String algoritmo = reader.readLine();
-
 		System.out.println("Ingrese la cadena que representa los datos de una transacción");
 		String mensaje = reader.readLine();
-
 		System.out.println("Ingrese el número de 0's esperado");
 		int ceros = Integer.parseInt(reader.readLine());
-
 		longitudMensaje = mensaje.length();
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+
+
 		Minado[] threads = new Minado[34]; 
 		tiempoInicial = System.nanoTime();
 		for(int i =0; i<6;i++)
@@ -174,7 +171,21 @@ public class Minado extends Thread{
 		{
 			threads[i].start();
 		}
-		
+		try
+		{
+			for (Thread thread : threads) {
+				thread.join();
+			}
+			if(!encontrado)
+			{
+				long elapsedTime = System.nanoTime() - tiempoInicial;
+				System.out.println("No se encontró respuesta. Se demoró "+elapsedTime/1000000+"ms");
+			}
+		}catch(Exception e)
+		{
+			e.getStackTrace();
+		}
+
 	}
 
 }
