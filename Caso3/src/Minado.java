@@ -150,7 +150,8 @@ public class Minado extends Thread{
 		longitudMensaje = mensaje.length();
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 
-
+		
+		int numTotalT=0;
 		Minado[] threads = new Minado[34]; 
 		tiempoInicial = System.nanoTime();
 		for(int i =0; i<6;i++)
@@ -173,13 +174,15 @@ public class Minado extends Thread{
 		}
 		try
 		{
+			int contadorThreads = 0;
 			for (Thread thread : threads) {
 				thread.join();
-			}
-			if(!encontrado)
-			{
-				long elapsedTime = System.nanoTime() - tiempoInicial;
-				System.out.println("No se encontró respuesta. Se demoró "+elapsedTime/1000000+"ms");
+				contadorThreads++;
+				if(!encontrado && contadorThreads==32)
+				{
+					long elapsedTime = System.nanoTime() - tiempoInicial;
+					System.out.println("No se encontró respuesta. Se demoró "+elapsedTime/1000000+"ms");
+				}
 			}
 		}catch(Exception e)
 		{
