@@ -150,25 +150,21 @@ public class Minado extends Thread{
 		longitudMensaje = mensaje.length();
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 
-		
+
 		int numTotalT=0;
 		Minado[] threads = new Minado[34]; 
 		tiempoInicial = System.nanoTime();
-		for(int i =0; i<6;i++)
+		for(int i=0; i<6;i++)
 		{
 			threads[i] = new Minado(abecedario, i+1, mensaje, ceros, algoritmo,'Z');
 		}
-		for(int i =0; i<6;i++)
-		{
-			threads[i].start();
-		}
-		int aux = 7;
+		int aux = 6;
 		for(char i='a'; i <= 'z'; i++)
 		{
 			threads[aux] = new Minado(abecedario, 6, mensaje, ceros, algoritmo,i);
 			aux++;
 		}
-		for(int i=7; i<33;i++)
+		for(int i=0; i<32;i++)
 		{
 			threads[i].start();
 		}
