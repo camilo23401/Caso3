@@ -9,10 +9,10 @@ public class Minado extends Thread{
 	private static boolean encontrado = false;
 	private static long tiempoInicial = 0;
 	private static int longitudMensaje = 0;
-	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+	private static final char[] POSIBLESHEX = "0123456789ABCDEF".toCharArray();
 	private static Object monitor = new Object();
-	private static int threadsFinalizados = 0;
 
+	
 	private int longitudCadena;
 	private char[] abecedario= new char[26];
 	private String mensaje;
@@ -46,7 +46,7 @@ public class Minado extends Thread{
 			MessageDigest tipoHash = MessageDigest.getInstance(algoritmo);
 			byte[] hashInicial = tipoHash.digest(mensaje.getBytes());
 			int numCeros = 0;
-			String hex = bytesToHex(hashInicial);
+			String hex = bytesAHexa(hashInicial);
 
 			for(int i = 0; i<hex.length();i++)
 			{
@@ -76,8 +76,7 @@ public class Minado extends Thread{
 
 	static void mineria(char[] abecedario, int k, String mensaje, double ceros, String algoritmo, boolean fin, char letra)
 	{
-		int n = abecedario.length;
-		mineriaRec(abecedario, mensaje, n, k, ceros, algoritmo, fin,letra);
+		mineriaRec(abecedario, mensaje, abecedario.length, k, ceros, algoritmo, fin,letra);
 	}
 
 
@@ -107,34 +106,34 @@ public class Minado extends Thread{
 				boolean hashSirve = hash(mensajeConV, algoritmo,ceros);
 				if(hashSirve)
 				{
-					System.out.println(mensajeConV);
 					long elapsedTime = System.nanoTime() - tiempoInicial;
 					synchronized(monitor)
 					{
 						encontrado = true;	
 					}
-					System.out.println("El valor "+letraExtra+mensaje.substring(longitudMensaje,mensaje.length())+" permitió cumplir la condición definida. Thread "+letra);
+					System.out.println("El valor "+letraExtra+mensaje.substring(longitudMensaje,mensaje.length())+" permitió cumplir la condición definida.");
+					System.out.println("Entonces, la cadena que cumple la condición es: "+mensajeConV);
 					System.out.println("El proceso tomó " + elapsedTime/1000000 + "ms" );
 				}
 				return;
 			}
 			for (int i = 0; i < n; ++i)
 			{
-				String nuevoMensaje = mensaje + abecedario[i];
-				mineriaRec(abecedario, nuevoMensaje , n, k - 1,ceros,algoritmo,fin, letra);
+				mineriaRec(abecedario, mensaje + abecedario[i] , n, k - 1,ceros,algoritmo,fin, letra);
 			}
 		}
 
 	}
 
-	public static String bytesToHex(byte[] bytes) {
-		char[] hexChars = new char[bytes.length * 2];
-		for (int j = 0; j < bytes.length; j++) {
-			int v = bytes[j] & 0xFF;
-			hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-			hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+	public static String bytesAHexa(byte[] bytes) {
+		char[] hex = new char[bytes.length * 2];
+		for (int i = 0; i < bytes.length; i++) 
+		{	
+			int aux = bytes[i] & 0xFF;
+			hex[i * 2] = POSIBLESHEX[aux >>> 4];
+			hex[i * 2 + 1] = POSIBLESHEX[aux & 0x0F];
 		}
-		return new String(hexChars);
+		return new String(hex);
 	}
 
 
@@ -151,7 +150,6 @@ public class Minado extends Thread{
 		char[] abecedario = {'a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 
 
-		int numTotalT=0;
 		Minado[] threads = new Minado[34]; 
 		tiempoInicial = System.nanoTime();
 		for(int i=0; i<6;i++)
